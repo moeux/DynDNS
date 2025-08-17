@@ -108,7 +108,7 @@ public static class NetcupClient
 
         Console.WriteLine(updateDnsRecordsResponse.LongMessage ?? updateDnsRecordsResponse.ShortMessage);
 
-        return JsonSerializer.Deserialize<DnsRecord[]>(updateDnsRecordsResponse.Data["dnsrecords"]) ?? [];
+        return updateDnsRecordsResponse.DnsRecordsData["dnsrecords"];
     }
 
     public static async Task<string> GetIpAddress()

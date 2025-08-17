@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DynDNS.Models.Dns;
 
 namespace DynDNS.Models.Response;
 
@@ -34,6 +35,20 @@ public class Response
                        ImmutableDictionary<string, string>.Empty;
 
             return ImmutableDictionary<string, string>.Empty;
+        }
+    }
+
+    [JsonIgnore]
+    public IImmutableDictionary<string, DnsRecord[]> DnsRecordsData
+    {
+        get
+        {
+            if (ResponseData.ValueKind == JsonValueKind.Object)
+                return JsonSerializer
+                           .Deserialize<IImmutableDictionary<string, DnsRecord[]>>(ResponseData.GetRawText()) ??
+                       ImmutableDictionary<string, DnsRecord[]>.Empty;
+
+            return ImmutableDictionary<string, DnsRecord[]>.Empty;
         }
     }
 }
