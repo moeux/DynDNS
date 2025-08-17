@@ -44,7 +44,7 @@ public static class NetcupClient
         var loginResponse = await response.Content.ReadFromJsonAsync<Response>() ??
                             throw new HttpRequestException("Failed to deserialize login response");
 
-        if (loginResponse?.Status != Status.Success) throw new HttpRequestException("Login unsuccessful");
+        if (loginResponse.Status != Status.Success) throw new HttpRequestException("Login unsuccessful");
 
         AuthDictionary["apisessionid"] = loginResponse.Data["apisessionid"];
 
@@ -75,7 +75,7 @@ public static class NetcupClient
         Console.WriteLine(logoutResponse.LongMessage ?? logoutResponse.ShortMessage);
     }
 
-    public static async Task UpdateDnsRecordsAsync(string domainName, params DnsRecord[] dnsRecords)
+    public static async Task<DnsRecord[]> UpdateDnsRecordsAsync(string domainName, params DnsRecord[] dnsRecords)
     {
         if (dnsRecords.Any(dnsRecord =>
                 string.IsNullOrWhiteSpace(dnsRecord.Priority) && dnsRecord.Type == RecordType.MX))
@@ -107,6 +107,8 @@ public static class NetcupClient
             throw new HttpRequestException("UpdateDnsRecords unsuccessful");
 
         Console.WriteLine(updateDnsRecordsResponse.LongMessage ?? updateDnsRecordsResponse.ShortMessage);
+
+        return JsonSerializer.Deserialize<DnsRecord[]>(updateDnsRecordsResponse.Data["dnsrecords"]) ?? [];
     }
 
     public static async Task<string> GetIpAddress()

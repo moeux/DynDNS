@@ -5,7 +5,7 @@ namespace DynDNS;
 
 internal static class Program
 {
-    private static string _ip = string.Empty;
+    private static DnsRecord? _previousDnsRecord;
 
     private static readonly string DomainName =
         Environment.GetEnvironmentVariable("NETCUP_DOMAINNAME") ?? throw new ArgumentNullException();
@@ -19,28 +19,36 @@ internal static class Program
         {
             var currentIp = await NetcupClient.GetIpAddress();
 
-            if (currentIp != _ip)
+            if (currentIp != _previousDnsRecord?.Destination)
             {
                 Console.WriteLine($"Updating DNS - {DateTime.Now}");
-                _ip = currentIp;
-                await UpdateDnsRecord();
+                await UpdateDnsRecord(currentIp);
             }
 
             await Task.Delay(TimeSpan.FromMinutes(5));
         }
     }
 
-    private static async Task UpdateDnsRecord()
+    private static async Task UpdateDnsRecord(string currentIp)
     {
         await NetcupClient.LoginAsync();
-        await NetcupClient.UpdateDnsRecordsAsync(
+
+        var newDnsRecord = new DnsRecord
+        {
+            HostName = HostName,
+            Type = RecordType.A,
+            Destination = currentIp
+        };
+        var updatedDnsRecords = await NetcupClient.UpdateDnsRecordsAsync(
             DomainName,
-            new DnsRecord
-            {
-                HostName = HostName,
-                Type = RecordType.A,
-                Destination = _ip
-            });
+            _previousDnsRecord is null
+                ? [newDnsRecord]
+                : [newDnsRecord, _previousDnsRecord with { DeleteRecord = true }]);
         await NetcupClient.LogoutAsync();
+
+        _previousDnsRecord = updatedDnsRecords.First(dnsRecord =>
+            dnsRecord.HostName == newDnsRecord.HostName &&
+            dnsRecord.Type == newDnsRecord.Type &&
+            dnsRecord.Destination == newDnsRecord.Destination);
     }
 }
