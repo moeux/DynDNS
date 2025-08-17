@@ -4,6 +4,7 @@
     build:
       context: .
       dockerfile: DynDNS/Dockerfile
+    restart: always
     environment:
       - NETCUP_BASE_ADDRESS=${NETCUP_BASE_ADDRESS}
       - NETCUP_CUSTOMER_NUMBER=${NETCUP_CUSTOMER_NUMBER}
