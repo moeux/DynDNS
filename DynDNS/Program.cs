@@ -15,7 +15,7 @@ internal static class Program
 
             if (currentIp != _ip)
             {
-                Console.WriteLine($"Updating DNS - ${DateTime.Now}");
+                Console.WriteLine($"Updating DNS - {DateTime.Now}");
                 _ip = currentIp;
                 await UpdateDnsRecord();
             }
