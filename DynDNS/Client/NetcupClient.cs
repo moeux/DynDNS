@@ -10,17 +10,20 @@ public static class NetcupClient
 {
     private static readonly HttpClient Client = new()
     {
-        BaseAddress = new Uri(Environment.GetEnvironmentVariable("NETCUP_BASE_ADDRESS") ??
-                              throw new ArgumentNullException())
+        BaseAddress = new Uri(GetEnvironmentVariable("NETCUP_BASE_ADDRESS"))
     };
 
     private static readonly Dictionary<string, string> AuthDictionary = new()
     {
-        ["customernumber"] = Environment.GetEnvironmentVariable("NETCUP_CUSTOMER_NUMBER") ??
-                             throw new ArgumentNullException(),
-        ["apikey"] = Environment.GetEnvironmentVariable("NETCUP_API_KEY") ?? throw new ArgumentNullException(),
-        ["apipassword"] = Environment.GetEnvironmentVariable("NETCUP_API_PASSWORD") ?? throw new ArgumentNullException()
+        ["customernumber"] = GetEnvironmentVariable("NETCUP_CUSTOMER_NUMBER"),
+        ["apikey"] = GetEnvironmentVariable("NETCUP_API_KEY"),
+        ["apipassword"] = GetEnvironmentVariable("NETCUP_API_PASSWORD")
     };
+
+    private static string GetEnvironmentVariable(string key)
+    {
+        return Environment.GetEnvironmentVariable(key) ?? throw new ArgumentNullException(key);
+    }
 
     public static async Task LoginAsync()
     {
@@ -34,11 +37,12 @@ public static class NetcupClient
             }
         };
 
-        var response = await Client.PostAsJsonAsync(string.Empty, loginRequest, JsonSerializerOptions.Web);
+        using var response = await Client.PostAsJsonAsync(string.Empty, loginRequest, JsonSerializerOptions.Web);
 
         response.EnsureSuccessStatusCode();
 
-        var loginResponse = await response.Content.ReadFromJsonAsync<Response>();
+        var loginResponse = await response.Content.ReadFromJsonAsync<Response>() ??
+                            throw new HttpRequestException("Failed to deserialize login response");
 
         if (loginResponse?.Status != Status.Success) throw new HttpRequestException("Login unsuccessful");
 
@@ -59,7 +63,8 @@ public static class NetcupClient
             }
         };
 
-        var response = await Client.PostAsJsonAsync(string.Empty, logoutRequest, JsonSerializerOptions.Web);
+        using var response = await Client.PostAsJsonAsync(string.Empty, logoutRequest, JsonSerializerOptions.Web) ??
+                             throw new HttpRequestException("Failed to deserialize logout response");
 
         response.EnsureSuccessStatusCode();
 
@@ -76,23 +81,23 @@ public static class NetcupClient
                 string.IsNullOrWhiteSpace(dnsRecord.Priority) && dnsRecord.Type == RecordType.MX))
             throw new ArgumentException("MX DNS records must have priority set");
 
-        var dnsRecordSet = new Dictionary<string, object>
-        {
-            ["dnsrecords"] = dnsRecords
-        };
         var updateDnsRecordsRequest = new UpdateDnsRecordsRequest
         {
             Parameters =
             {
                 ["domainname"] = domainName,
-                ["dnsrecordset"] = dnsRecordSet,
+                ["dnsrecordset"] = new Dictionary<string, object>
+                {
+                    ["dnsrecords"] = dnsRecords
+                },
                 ["customernumber"] = AuthDictionary["customernumber"],
                 ["apikey"] = AuthDictionary["apikey"],
                 ["apisessionid"] = AuthDictionary["apisessionid"]
             }
         };
 
-        var response = await Client.PostAsJsonAsync(string.Empty, updateDnsRecordsRequest, JsonSerializerOptions.Web);
+        using var response =
+            await Client.PostAsJsonAsync(string.Empty, updateDnsRecordsRequest, JsonSerializerOptions.Web);
 
         response.EnsureSuccessStatusCode();
 

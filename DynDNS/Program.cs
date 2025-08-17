@@ -7,6 +7,12 @@ internal static class Program
 {
     private static string _ip = string.Empty;
 
+    private static readonly string DomainName =
+        Environment.GetEnvironmentVariable("NETCUP_DOMAINNAME") ?? throw new ArgumentNullException();
+
+    private static readonly string HostName =
+        Environment.GetEnvironmentVariable("NETCUP_HOSTNAME") ?? throw new ArgumentNullException();
+
     private static async Task Main()
     {
         while (true)
@@ -28,11 +34,10 @@ internal static class Program
     {
         await NetcupClient.LoginAsync();
         await NetcupClient.UpdateDnsRecordsAsync(
-            Environment.GetEnvironmentVariable("NETCUP_DOMAINNAME") ?? throw new ArgumentNullException(),
+            DomainName,
             new DnsRecord
             {
-                HostName = Environment.GetEnvironmentVariable("NETCUP_HOSTNAME") ??
-                           throw new ArgumentNullException(),
+                HostName = HostName,
                 Type = RecordType.A,
                 Destination = _ip
             });
