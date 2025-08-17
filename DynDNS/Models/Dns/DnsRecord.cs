@@ -4,7 +4,7 @@ namespace DynDNS.Models.Dns;
 
 public record DnsRecord
 {
-    [JsonPropertyName("id")] public uint? Id { get; init; }
+    [JsonPropertyName("id")] public string? Id { get; init; }
 
     [JsonPropertyName("hostname")] public required string HostName { get; init; }
 
