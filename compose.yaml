@@ -1,0 +1,14 @@
+﻿services:
+  dyndns:
+    image: dyndns
+    build:
+      context: .
+      dockerfile: DynDNS/Dockerfile
+    environment:
+      - NETCUP_BASE_ADDRESS=${NETCUP_BASE_ADDRESS}
+      - NETCUP_CUSTOMER_NUMBER=${NETCUP_CUSTOMER_NUMBER}
+      - NETCUP_API_KEY=${NETCUP_API_KEY}
+      - NETCUP_API_PASSWORD=${NETCUP_API_PASSWORD}
+      - NETCUP_HOSTNAME=${NETCUP_HOSTNAME}
+      - NETCUP_DOMAINNAME=${NETCUP_DOMAINNAME}
+
